@@ -1,6 +1,43 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const siteMenu = document.querySelector('.nav-menu');
 
+const protectedShortcuts = new Set(['c', 'x', 'a', 'u', 's', 'p']);
+
+const blockCopyShortcuts = (event) => {
+  if (!(event.ctrlKey || event.metaKey)) return;
+
+  const key = event.key.toLowerCase();
+  if (protectedShortcuts.has(key)) {
+    event.preventDefault();
+  }
+};
+
+document.addEventListener('contextmenu', (event) => {
+  event.preventDefault();
+});
+
+document.addEventListener('selectstart', (event) => {
+  event.preventDefault();
+});
+
+document.addEventListener('copy', (event) => {
+  event.preventDefault();
+});
+
+document.addEventListener('cut', (event) => {
+  event.preventDefault();
+});
+
+document.addEventListener('dragstart', (event) => {
+  if (event.target instanceof Element) {
+    if (event.target.closest('img, video, canvas, svg, iframe, a, button')) {
+      event.preventDefault();
+    }
+  }
+});
+
+document.addEventListener('keydown', blockCopyShortcuts);
+
 if (menuToggle && siteMenu) {
   menuToggle.addEventListener('click', () => {
     const isOpen = siteMenu.classList.toggle('open');
@@ -92,7 +129,7 @@ certificateViewer.addEventListener('click', (event) => {
 
 document.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
-  if ((event.ctrlKey || event.metaKey) && ['c', 'x', 'p', 's', 'u'].includes(key)) event.preventDefault();
+  if ((event.ctrlKey || event.metaKey) && ['c', 'x', 'p', 's', 'u', 'a'].includes(key)) event.preventDefault();
   if (event.key === 'Escape' && !certificateViewer.hidden) closeCertificateViewer();
 });
 

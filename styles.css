@@ -25,7 +25,12 @@ button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 img, video { max-width: 100%; display: block; }
 img { -webkit-user-drag: none; user-drag: none; }
-body { -webkit-user-select: text; user-select: text; }
+html, body, main, article, section, header, footer, nav, div, p, h1, h2, h3, h4, h5, h6, span, a, button, input, textarea, label, details, summary, img, video, canvas, svg, iframe, object {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
 input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
 .container { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
 .page-noise { position: fixed; inset: 0; pointer-events: none; opacity: .22; z-index: 10; background-image: radial-gradient(rgba(22,46,54,.16) .55px, transparent .55px); background-size: 6px 6px; mix-blend-mode: multiply; }
