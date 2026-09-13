@@ -3,36 +3,59 @@ const siteMenu = document.querySelector('.nav-menu');
 
 const protectedShortcuts = new Set(['c', 'x', 'a', 'u', 's', 'p']);
 
+const isTextEditableTarget = (target) => {
+  if (!(target instanceof Element)) return false;
+  return target.closest('input, textarea, [contenteditable="true"]');
+};
+
+const clearSelection = () => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+
+  const activeElement = document.activeElement;
+  if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
+    return;
+  }
+
+  selection.removeAllRanges();
+};
+
 const blockCopyShortcuts = (event) => {
   if (!(event.ctrlKey || event.metaKey)) return;
 
   const key = event.key.toLowerCase();
   if (protectedShortcuts.has(key)) {
+    if (isTextEditableTarget(document.activeElement)) return;
     event.preventDefault();
   }
 };
 
+document.addEventListener('selectionchange', clearSelection);
+
 document.addEventListener('contextmenu', (event) => {
+  if (isTextEditableTarget(event.target)) return;
   event.preventDefault();
 });
 
 document.addEventListener('selectstart', (event) => {
+  if (isTextEditableTarget(event.target)) return;
   event.preventDefault();
 });
 
 document.addEventListener('copy', (event) => {
+  if (isTextEditableTarget(event.target)) return;
   event.preventDefault();
 });
 
 document.addEventListener('cut', (event) => {
+  if (isTextEditableTarget(event.target)) return;
   event.preventDefault();
 });
 
 document.addEventListener('dragstart', (event) => {
-  if (event.target instanceof Element) {
-    if (event.target.closest('img, video, canvas, svg, iframe, a, button')) {
-      event.preventDefault();
-    }
+  const target = event.target;
+  if (target instanceof Element && target.closest('img, video, canvas, svg, iframe, a, button')) {
+    event.preventDefault();
   }
 });
 
@@ -129,7 +152,11 @@ certificateViewer.addEventListener('click', (event) => {
 
 document.addEventListener('keydown', (event) => {
   const key = event.key.toLowerCase();
-  if ((event.ctrlKey || event.metaKey) && ['c', 'x', 'p', 's', 'u', 'a'].includes(key)) event.preventDefault();
+  if ((event.ctrlKey || event.metaKey) && ['c', 'x', 'p', 's', 'u', 'a'].includes(key)) {
+    if (isTextEditableTarget(document.activeElement)) return;
+    event.preventDefault();
+  }
+
   if (event.key === 'Escape' && !certificateViewer.hidden) closeCertificateViewer();
 });
 
