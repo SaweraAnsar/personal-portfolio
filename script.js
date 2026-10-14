@@ -1,66 +1,6 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const siteMenu = document.querySelector('.nav-menu');
 
-const protectedShortcuts = new Set(['c', 'x', 'a', 'u', 's', 'p']);
-
-const isTextEditableTarget = (target) => {
-  if (!(target instanceof Element)) return false;
-  return target.closest('input, textarea, [contenteditable="true"]');
-};
-
-const clearSelection = () => {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return;
-
-  const activeElement = document.activeElement;
-  if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable)) {
-    return;
-  }
-
-  selection.removeAllRanges();
-};
-
-const blockCopyShortcuts = (event) => {
-  if (!(event.ctrlKey || event.metaKey)) return;
-
-  const key = event.key.toLowerCase();
-  if (protectedShortcuts.has(key)) {
-    if (isTextEditableTarget(document.activeElement)) return;
-    event.preventDefault();
-  }
-};
-
-document.addEventListener('selectionchange', clearSelection);
-
-document.addEventListener('contextmenu', (event) => {
-  if (isTextEditableTarget(event.target)) return;
-  event.preventDefault();
-});
-
-document.addEventListener('selectstart', (event) => {
-  if (isTextEditableTarget(event.target)) return;
-  event.preventDefault();
-});
-
-document.addEventListener('copy', (event) => {
-  if (isTextEditableTarget(event.target)) return;
-  event.preventDefault();
-});
-
-document.addEventListener('cut', (event) => {
-  if (isTextEditableTarget(event.target)) return;
-  event.preventDefault();
-});
-
-document.addEventListener('dragstart', (event) => {
-  const target = event.target;
-  if (target instanceof Element && target.closest('img, video, canvas, svg, iframe, a, button')) {
-    event.preventDefault();
-  }
-});
-
-document.addEventListener('keydown', blockCopyShortcuts);
-
 if (menuToggle && siteMenu) {
   menuToggle.addEventListener('click', () => {
     const isOpen = siteMenu.classList.toggle('open');
@@ -72,6 +12,13 @@ if (menuToggle && siteMenu) {
       siteMenu.classList.remove('open');
       menuToggle.setAttribute('aria-expanded', 'false');
     });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!siteMenu.contains(event.target) && !menuToggle.contains(event.target)) {
+      siteMenu.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    }
   });
 }
 
@@ -87,38 +34,10 @@ document.querySelectorAll('.project-details-toggle').forEach((button) => {
   });
 });
 
-document.querySelectorAll('img').forEach((image) => image.setAttribute('draggable', 'false'));
-
 document.querySelectorAll('.project-video').forEach((video) => {
   video.setAttribute('playsinline', 'true');
   video.muted = true;
 });
-
-const researchCard = document.querySelector('.featured-research');
-if (researchCard) {
-  const tinyLabel = researchCard.querySelector('.tiny-label');
-  if (tinyLabel) tinyLabel.textContent = 'Research in Progress';
-  const researchSummary = researchCard.querySelector('.research-summary');
-  if (researchSummary) {
-    researchSummary.innerHTML = '<p><strong>Status:</strong> Research in Progress</p><p><strong>Supervision:</strong> Under the supervision of Dr. Zara Naeem</p><p>Currently working on this research topic under the supervision of Dr. Zara Naeem, with a focus on analytical approaches and future directions for mycotoxin detection, quantification, and detoxification.</p>';
-  }
-}
-
-const milestoneGrid = document.querySelector('.milestone-grid');
-if (milestoneGrid) {
-  const milestonesSection = milestoneGrid.closest('.achievements-section');
-  if (milestonesSection) milestonesSection.id = 'milestones';
-  const achievementsSection = document.createElement('section');
-  achievementsSection.className = 'section achievements-showcase';
-  achievementsSection.id = 'achievements';
-  achievementsSection.innerHTML = '<div class="container"><div class="section-heading reveal"><div><p class="kicker">05 / Achievements</p><h2>Recognition that<br><em>supports the work.</em></h2></div><p class="heading-note">Academic access<br><span>ACHIEVEMENT</span></p></div><p class="achievement-intro reveal">Academic opportunities that support continued learning, digital development, and research-oriented work.</p><div class="achievement-grid"><details class="achievement-card reveal"><summary><span class="milestone-icon" aria-hidden="true">▣</span><span class="timeline-date">Academic achievement</span><h3>Prime Minister\'s Youth Laptop Scheme Phase IV (2025)</h3><span class="card-index">+</span></summary><div class="achievement-detail"><p>Selected as a recipient of a laptop under the Prime Minister\'s Youth Laptop Scheme Phase IV (2025), supporting academic learning, digital development, and research-oriented work.</p><p class="milestone-outcomes"><b>Category:</b> Academic achievement · Technology access</p></div></details></div></div>';
-  milestonesSection?.before(achievementsSection);
-}
-
-const footerNotice = document.querySelector('.footer-inner small');
-if (footerNotice) {
-  footerNotice.textContent = '© 2026 Sawera Ansar. All rights reserved. Portfolio content, original work, project materials, and certificate evidence may not be reproduced or redistributed without permission.';
-}
 
 const certificateViewer = document.createElement('div');
 certificateViewer.className = 'certificate-viewer';
@@ -151,17 +70,10 @@ certificateViewer.addEventListener('click', (event) => {
 });
 
 document.addEventListener('keydown', (event) => {
-  const key = event.key.toLowerCase();
-  if ((event.ctrlKey || event.metaKey) && ['c', 'x', 'p', 's', 'u', 'a'].includes(key)) {
-    if (isTextEditableTarget(document.activeElement)) return;
-    event.preventDefault();
+  if (event.key === 'Escape' && !certificateViewer.hidden) {
+    closeCertificateViewer();
+    document.querySelector('.certificate-button:focus')?.blur();
   }
-
-  if (event.key === 'Escape' && !certificateViewer.hidden) closeCertificateViewer();
-});
-
-document.addEventListener('dragstart', (event) => {
-  if (event.target.tagName === 'IMG') event.preventDefault();
 });
 
 const revealItems = document.querySelectorAll('.reveal');
@@ -180,9 +92,12 @@ const contactForm = document.querySelector('#contact-form');
 if (contactForm) {
   contactForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    const status = document.querySelector('.form-status');
-    if (status) status.textContent = 'Thanks. This demo form is ready to connect to your email service.';
-    contactForm.reset();
+    const formData = new FormData(contactForm);
+    const subject = encodeURIComponent(`Portfolio inquiry from ${formData.get('name')}`);
+    const body = encodeURIComponent(`${formData.get('message')}\n\nFrom: ${formData.get('name')}\nEmail: ${formData.get('email')}`);
+    const status = contactForm.querySelector('.form-status');
+    if (status) status.textContent = 'Opening your email application to send this message.';
+    window.location.href = `mailto:sawera.ansar0@gmail.com?subject=${subject}&body=${body}`;
   });
 }
 
@@ -202,3 +117,93 @@ const activeObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.45 });
 
 sections.forEach((section) => activeObserver.observe(section));
+
+const progressBar = document.querySelector('.scroll-progress');
+const updateScrollProgress = () => {
+  const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = scrollableHeight > 0 ? window.scrollY / scrollableHeight : 0;
+  if (progressBar) progressBar.style.transform = `scaleX(${progress})`;
+  document.querySelector('.site-header')?.classList.toggle('scrolled', window.scrollY > 24);
+};
+
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+window.addEventListener('resize', updateScrollProgress);
+updateScrollProgress();
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const field = document.createElement('canvas');
+field.className = 'science-field';
+field.setAttribute('aria-hidden', 'true');
+document.body.prepend(field);
+const context = field.getContext('2d');
+let fieldWidth = 0;
+let fieldHeight = 0;
+let particles = [];
+let pointerX = 0;
+let pointerY = 0;
+let animationFrame = 0;
+
+const resizeField = () => {
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+  fieldWidth = window.innerWidth;
+  fieldHeight = window.innerHeight;
+  field.width = fieldWidth * pixelRatio;
+  field.height = fieldHeight * pixelRatio;
+  context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  const count = Math.min(58, Math.max(22, Math.floor(fieldWidth / 25)));
+  particles = Array.from({ length: count }, () => ({
+    x: Math.random() * fieldWidth,
+    y: Math.random() * fieldHeight,
+    dx: (Math.random() - 0.5) * 0.18,
+    dy: (Math.random() - 0.5) * 0.18,
+    radius: Math.random() * 1.6 + 0.7
+  }));
+};
+
+const drawField = () => {
+  context.clearRect(0, 0, fieldWidth, fieldHeight);
+  particles.forEach((particle, index) => {
+    particle.x += particle.dx;
+    particle.y += particle.dy;
+    if (particle.x < 0 || particle.x > fieldWidth) particle.dx *= -1;
+    if (particle.y < 0 || particle.y > fieldHeight) particle.dy *= -1;
+    const x = particle.x + pointerX * 10;
+    const y = particle.y + pointerY * 10;
+    context.beginPath();
+    context.arc(x, y, particle.radius, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(73, 202, 234, 0.42)';
+    context.fill();
+
+    for (let next = index + 1; next < particles.length; next += 1) {
+      const other = particles[next];
+      const otherX = other.x + pointerX * 10;
+      const otherY = other.y + pointerY * 10;
+      const distance = Math.hypot(x - otherX, y - otherY);
+      if (distance > 116) continue;
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(otherX, otherY);
+      context.strokeStyle = `rgba(73, 202, 234, ${(1 - distance / 116) * 0.13})`;
+      context.lineWidth = 0.7;
+      context.stroke();
+    }
+  });
+  animationFrame = window.requestAnimationFrame(drawField);
+};
+
+const stopField = () => window.cancelAnimationFrame(animationFrame);
+const startField = () => {
+  stopField();
+  if (!reducedMotion.matches) drawField();
+};
+
+window.addEventListener('resize', resizeField);
+window.addEventListener('pointermove', (event) => {
+  pointerX = event.clientX / window.innerWidth - 0.5;
+  pointerY = event.clientY / window.innerHeight - 0.5;
+  document.documentElement.style.setProperty('--pointer-x', `${pointerX * 8}px`);
+  document.documentElement.style.setProperty('--pointer-y', `${pointerY * 8}px`);
+}, { passive: true });
+reducedMotion.addEventListener('change', startField);
+resizeField();
+startField();
